@@ -69,7 +69,7 @@ def find_videos(tags):
     
     for tag in tags:
         try:
-            result = search_tag(tag)
+            result = search_tag("Learn "  + tag + " English shorts")
             id_list.extend(result)
             print(f"Found {len(result)} videos for {tag}", flush=True)
         except Exception as e:
