@@ -1,9 +1,15 @@
+import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pull_youtube import find_videos
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
+
+
+def log(message):
+    """Print and flush immediately for Docker logs."""
+    print(message, flush=True)
 
 
 @app.route('/api/videos', methods=['GET'])
@@ -14,23 +20,23 @@ def get_videos():
         - tag: The search tag (required)
     """
     tag = request.args.get('tag', '')
-    print(f"[SEARCH] Received search request for: '{tag}'")
+    log(f"[SEARCH] Received search request for: '{tag}'")
     
     if not tag:
-        print("[SEARCH] Error: No tag provided")
+        log("[SEARCH] Error: No tag provided")
         return jsonify({'error': 'No tag provided'}), 400
     
     try:
-        print(f"[SEARCH] Calling find_videos with tag: '{tag}'")
+        log(f"[SEARCH] Calling find_videos with tag: '{tag}'")
         video_ids = find_videos([tag])
-        print(f"[SEARCH] Found {len(video_ids)} videos for '{tag}'")
+        log(f"[SEARCH] Found {len(video_ids)} videos for '{tag}'")
         return jsonify({
             'tag': tag,
             'videos': video_ids,
             'count': len(video_ids)
         })
     except Exception as e:
-        print(f"[SEARCH] Error searching for '{tag}': {e}")
+        log(f"[SEARCH] Error searching for '{tag}': {e}")
         return jsonify({'error': str(e)}), 500
 
 
