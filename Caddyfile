@@ -6,12 +6,30 @@
 # The Plain HTTP Block (No encryption)
 http://34.150.25.115 {
     root * /srv
-    file_server
+    
+    # Reverse proxy API requests to Flask backend
+    handle /api/* {
+        reverse_proxy api:5000
+    }
+    
+    # Serve static files
+    handle {
+        file_server
+    }
 }
 
 # The Secure HTTPS Block (With self-signed encryption)
 https://34.150.25.115 {
     root * /srv
-    file_server
     tls internal
+    
+    # Reverse proxy API requests to Flask backend
+    handle /api/* {
+        reverse_proxy api:5000
+    }
+    
+    # Serve static files
+    handle {
+        file_server
+    }
 }

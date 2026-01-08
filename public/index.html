@@ -28,14 +28,84 @@
             width: 100%;
             height: 100%;
         }
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .search-input {
+            background-color: #222;
+            border: 1px solid #444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            outline: none;
+            width: 300px;
+        }
+        .search-input:focus {
+            border-color: #666;
+        }
+        .search-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .search-btn:hover {
+            background-color: #2563eb;
+        }
+        .search-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+        .current-tag {
+            color: #3b82f6;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center font-sans">
 
     <div class="mb-6 text-center">
         <h1 class="text-2xl font-bold mb-2">Video Gallery</h1>
+        
+        <!-- Search Input -->
+        <div class="search-container justify-center">
+            <input 
+                type="text" 
+                id="tagInput" 
+                class="search-input" 
+                placeholder="Enter a topic (e.g., psychology, history)"
+                onkeydown="if(event.key === 'Enter') searchVideos()"
+            >
+            <button id="searchBtn" onclick="searchVideos()" class="search-btn">
+                <span id="searchBtnText">Search</span>
+                <span id="searchSpinner" class="loading-spinner hidden"></span>
+            </button>
+        </div>
+        
+        <p id="currentTagDisplay" class="text-gray-400 text-sm mb-2 hidden">
+            Showing videos for: <span id="currentTag" class="current-tag"></span>
+        </p>
+        
         <p class="text-gray-400 text-sm">Use <span class="bg-gray-800 px-2 py-1 rounded text-white font-mono">↑</span> and <span class="bg-gray-800 px-2 py-1 rounded text-white font-mono">↓</span> arrow keys to navigate</p>
-        <p id="counter" class="text-gray-500 text-xs mt-2">Video 1 of X</p>
+        <p id="counter" class="text-gray-500 text-xs mt-2">Enter a topic to get started</p>
     </div>
 
     <div class="video-container">
@@ -46,6 +116,9 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
         </iframe>
+        <div id="placeholder" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-gray-500">
+            Enter a topic above to discover videos
+        </div>
     </div>
 
     <div class="mt-8 flex gap-4">
@@ -64,22 +137,78 @@
     </div>
 
     <script>
-        // The list of video IDs provided
-        const videoIds = [
-            '9GxZovqUsJU', 'OsTNif2mzIw', 'af7Lc2TuR00', '7_GJV2r6Otg', 
-            'GQATCQ9SV3M', 'VblhspWPCvQ', '707N5xh32tw', 'Qmuq0-F_2g0', 
-            'gdFCRXWm0mo', '7HlHI2dN78A', 'Bl0yJlFjQ78', 'EwWXtAAKcfs', 
-            '8z5ra5omw-g', 'un3Xh1Nf1t8'
-        ];
-
+        // API endpoint for fetching videos
+        const API_URL = '/api/videos';
+        
+        // Dynamic list of video IDs
+        let videoIds = [];
         let currentIndex = 0;
+        let isLoading = false;
+        
         const player = document.getElementById('player');
         const counter = document.getElementById('counter');
+        const placeholder = document.getElementById('placeholder');
+        const tagInput = document.getElementById('tagInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchBtnText = document.getElementById('searchBtnText');
+        const searchSpinner = document.getElementById('searchSpinner');
+        const currentTagDisplay = document.getElementById('currentTagDisplay');
+        const currentTagSpan = document.getElementById('currentTag');
+
+        async function searchVideos() {
+            const tag = tagInput.value.trim();
+            if (!tag || isLoading) return;
+            
+            // Show loading state
+            isLoading = true;
+            searchBtn.disabled = true;
+            searchBtnText.classList.add('hidden');
+            searchSpinner.classList.remove('hidden');
+            counter.innerText = 'Searching for videos...';
+            placeholder.innerText = 'Loading videos...';
+            placeholder.classList.remove('hidden');
+            player.src = '';
+            
+            try {
+                const response = await fetch(`${API_URL}?tag=${encodeURIComponent(tag)}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch videos');
+                }
+                
+                if (data.videos && data.videos.length > 0) {
+                    videoIds = data.videos;
+                    currentIndex = 0;
+                    
+                    // Update UI
+                    currentTagSpan.innerText = tag;
+                    currentTagDisplay.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    
+                    loadVideo(0);
+                } else {
+                    counter.innerText = 'No videos found for this topic';
+                    placeholder.innerText = 'No videos found. Try a different topic.';
+                    placeholder.classList.remove('hidden');
+                    videoIds = [];
+                }
+            } catch (error) {
+                console.error('Error fetching videos:', error);
+                counter.innerText = 'Error loading videos';
+                placeholder.innerText = `Error: ${error.message}. Please try again.`;
+                placeholder.classList.remove('hidden');
+            } finally {
+                // Reset loading state
+                isLoading = false;
+                searchBtn.disabled = false;
+                searchBtnText.classList.remove('hidden');
+                searchSpinner.classList.add('hidden');
+            }
+        }
 
         function loadVideo(index) {
-            // Ensure index wraps around or stops at edges? 
-            // Let's implement wrap-around for smoother UX or stop at edges.
-            // Requirement was simpler: down goes down, up goes up.
+            if (videoIds.length === 0) return;
             
             // Bounds checking
             if (index < 0) index = 0;
@@ -90,6 +219,7 @@
             
             // Embed URL with autoplay enabled for smoother transitions
             player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            placeholder.classList.add('hidden');
             
             updateCounter();
         }
@@ -99,28 +229,32 @@
         }
 
         function nextVideo() {
+            if (videoIds.length === 0) return;
+            
             if (currentIndex < videoIds.length - 1) {
                 loadVideo(currentIndex + 1);
             } else {
-                // Optional: Loop back to start
+                // Loop back to start
                 loadVideo(0); 
             }
         }
 
         function prevVideo() {
+            if (videoIds.length === 0) return;
+            
             if (currentIndex > 0) {
                 loadVideo(currentIndex - 1);
             } else {
-                // Optional: Loop to end
+                // Loop to end
                 loadVideo(videoIds.length - 1);
             }
         }
 
-        // Initialize first video
-        loadVideo(0);
-
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
+            // Don't navigate if typing in the search input
+            if (document.activeElement === tagInput) return;
+            
             if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
                 e.preventDefault(); // Prevent page scrolling
                 nextVideo();
