@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 def search_tag(tag):
     """Search for a single tag and return video IDs."""
     id_list = []
-    s = Search(tag)
+    s = Search(tag + " shorts")
     print(f"Searching for: {tag} shorts")    
     # Load more pages of results (each call gets ~20 more videos)
     for _ in range(5):  # Get 5 pages of results
