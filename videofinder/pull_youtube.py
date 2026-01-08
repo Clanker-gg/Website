@@ -1,9 +1,14 @@
 import os
 import random
+import isodate
 from googleapiclient.discovery import build
 
 # Get API key from environment variable
 API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
+
+# Max duration for Shorts (60 seconds)
+MAX_SHORT_DURATION = 60
+
 
 def get_youtube_client():
     """Create YouTube API client."""
@@ -12,12 +17,38 @@ def get_youtube_client():
     return build('youtube', 'v3', developerKey=API_KEY)
 
 
-def search_tag(tag):
-    """Search for a single tag and return video IDs."""
-    youtube = get_youtube_client()
-    id_list = []
+def filter_shorts(youtube, video_ids):
+    """Filter video IDs to only include actual Shorts (under 60 seconds)."""
+    if not video_ids:
+        return []
     
-    search_query = f"{tag} shorts"
+    shorts = []
+    # API allows up to 50 IDs per request
+    for i in range(0, len(video_ids), 50):
+        batch = video_ids[i:i+50]
+        request = youtube.videos().list(
+            part='contentDetails',
+            id=','.join(batch)
+        )
+        response = request.execute()
+        
+        for item in response.get('items', []):
+            duration_str = item['contentDetails']['duration']
+            # Parse ISO 8601 duration (e.g., "PT45S" = 45 seconds)
+            duration = isodate.parse_duration(duration_str).total_seconds()
+            if duration <= MAX_SHORT_DURATION:
+                shorts.append(item['id'])
+    
+    return shorts
+
+
+def search_tag(tag):
+    """Search for a single tag and return video IDs (Shorts only)."""
+    youtube = get_youtube_client()
+    candidate_ids = []
+    
+    # Use #shorts hashtag to target Shorts specifically
+    search_query = f"{tag} #shorts"
     print(f"Searching for: {search_query}", flush=True)
     
     try:
@@ -26,7 +57,7 @@ def search_tag(tag):
             q=search_query,
             part='id',
             type='video',
-            videoDuration='short',  # Videos under 4 minutes
+            videoDuration='short',  # Videos under 4 minutes (pre-filter)
             maxResults=50,
             relevanceLanguage='en',
             safeSearch='moderate'
@@ -37,10 +68,10 @@ def search_tag(tag):
         for item in response.get('items', []):
             video_id = item['id'].get('videoId')
             if video_id:
-                id_list.append(video_id)
+                candidate_ids.append(video_id)
         
-        # Get next page if available (uses more quota)
-        if 'nextPageToken' in response and len(id_list) < 100:
+        # Get next page if available
+        if 'nextPageToken' in response and len(candidate_ids) < 100:
             request = youtube.search().list(
                 q=search_query,
                 part='id',
@@ -55,12 +86,18 @@ def search_tag(tag):
             for item in response.get('items', []):
                 video_id = item['id'].get('videoId')
                 if video_id:
-                    id_list.append(video_id)
+                    candidate_ids.append(video_id)
+        
+        # Filter to actual Shorts (under 60 seconds)
+        print(f"Found {len(candidate_ids)} candidates, filtering for Shorts...", flush=True)
+        shorts = filter_shorts(youtube, candidate_ids)
+        print(f"Filtered to {len(shorts)} actual Shorts", flush=True)
+        return shorts
                     
     except Exception as e:
         print(f"Error searching YouTube: {e}", flush=True)
     
-    return id_list
+    return []
 
 
 def find_videos(tags):
@@ -69,9 +106,9 @@ def find_videos(tags):
     
     for tag in tags:
         try:
-            result = search_tag("Learn "  + tag + " English shorts")
+            result = search_tag(f"Learn {tag}")
             id_list.extend(result)
-            print(f"Found {len(result)} videos for {tag}", flush=True)
+            print(f"Found {len(result)} videos for {tag}", flush=True) 
         except Exception as e:
             print(f"Error searching {tag}: {e}", flush=True)
     
