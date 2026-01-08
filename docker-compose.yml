@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     expose:
       - "5000"
+    environment:
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
 
 volumes:
   caddy_data:
