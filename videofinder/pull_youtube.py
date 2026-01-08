@@ -48,7 +48,7 @@ def search_tag(tag):
     candidate_ids = []
     
     # Use #shorts hashtag to target Shorts specifically
-    search_query = f"{tag} #shorts"
+    search_query = f"{tag} #shorts English"
     print(f"Searching for: {search_query}", flush=True)
     
     try:
