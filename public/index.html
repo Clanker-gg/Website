@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Navigator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            overflow: hidden; /* Prevent scrolling when using arrows */
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            width: 80%;
+            max-width: 1000px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center font-sans">
+
+    <div class="mb-6 text-center">
+        <h1 class="text-2xl font-bold mb-2">Video Gallery</h1>
+        <p class="text-gray-400 text-sm">Use <span class="bg-gray-800 px-2 py-1 rounded text-white font-mono">↑</span> and <span class="bg-gray-800 px-2 py-1 rounded text-white font-mono">↓</span> arrow keys to navigate</p>
+        <p id="counter" class="text-gray-500 text-xs mt-2">Video 1 of X</p>
+    </div>
+
+    <div class="video-container">
+        <iframe 
+            id="player" 
+            src="" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <div class="mt-8 flex gap-4">
+        <button onclick="prevVideo()" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-full transition duration-200 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/>
+            </svg>
+            Previous
+        </button>
+        <button onclick="nextVideo()" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-full transition duration-200 flex items-center gap-2">
+            Next
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 1a.5.5 0 0 0-.5.5v11.793l-3.146-3.147a.5.5 0 0 0-.708.708l4 4a.5.5 0 0 0 .708 0l4-4a.5.5 0 0 0-.708-.708L8.5 13.293V1.5a.5.5 0 0 0-.5-.5z"/>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // The list of video IDs provided
+        const videoIds = [
+            '9GxZovqUsJU', 'OsTNif2mzIw', 'af7Lc2TuR00', '7_GJV2r6Otg', 
+            'GQATCQ9SV3M', 'VblhspWPCvQ', '707N5xh32tw', 'Qmuq0-F_2g0', 
+            'gdFCRXWm0mo', '7HlHI2dN78A', 'Bl0yJlFjQ78', 'EwWXtAAKcfs', 
+            '8z5ra5omw-g', 'un3Xh1Nf1t8'
+        ];
+
+        let currentIndex = 0;
+        const player = document.getElementById('player');
+        const counter = document.getElementById('counter');
+
+        function loadVideo(index) {
+            // Ensure index wraps around or stops at edges? 
+            // Let's implement wrap-around for smoother UX or stop at edges.
+            // Requirement was simpler: down goes down, up goes up.
+            
+            // Bounds checking
+            if (index < 0) index = 0;
+            if (index >= videoIds.length) index = videoIds.length - 1;
+
+            currentIndex = index;
+            const videoId = videoIds[currentIndex];
+            
+            // Embed URL with autoplay enabled for smoother transitions
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            
+            updateCounter();
+        }
+
+        function updateCounter() {
+            counter.innerText = `Video ${currentIndex + 1} of ${videoIds.length}`;
+        }
+
+        function nextVideo() {
+            if (currentIndex < videoIds.length - 1) {
+                loadVideo(currentIndex + 1);
+            } else {
+                // Optional: Loop back to start
+                loadVideo(0); 
+            }
+        }
+
+        function prevVideo() {
+            if (currentIndex > 0) {
+                loadVideo(currentIndex - 1);
+            } else {
+                // Optional: Loop to end
+                loadVideo(videoIds.length - 1);
+            }
+        }
+
+        // Initialize first video
+        loadVideo(0);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault(); // Prevent page scrolling
+                nextVideo();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault(); // Prevent page scrolling
+                prevVideo();
+            }
+        });
+    </script>
+</body>
+</html>
