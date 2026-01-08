@@ -102,21 +102,6 @@
     <div class="mb-6 text-center">
         <h1 class="text-2xl font-bold mb-4">Video Gallery</h1>
         
-        <!-- Search Input -->
-        <div class="search-container">
-            <input 
-                type="text" 
-                id="tagInput" 
-                class="search-input" 
-                placeholder="Enter a topic (e.g., psychology, history)"
-                onkeydown="if(event.key === 'Enter') searchVideos()"
-            >
-            <button id="searchBtn" onclick="searchVideos()" class="search-btn">
-                <span id="searchBtnText">🔍 Search</span>
-                <span id="searchSpinner" class="loading-spinner hidden"></span>
-            </button>
-        </div>
-        
         <p id="currentTagDisplay" class="text-gray-400 text-sm mb-2 hidden">
             Showing videos for: <span id="currentTag" class="current-tag"></span>
         </p>
@@ -133,8 +118,22 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
         </iframe>
-        <div id="placeholder" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-gray-500">
-            Enter a topic above to discover videos
+        <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-gray-500 gap-4">
+            <!-- Search Input inside placeholder -->
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="tagInput" 
+                    class="search-input" 
+                    placeholder="Enter a topic (e.g., psychology, history)"
+                    onkeydown="if(event.key === 'Enter') searchVideos()"
+                >
+                <button id="searchBtn" onclick="searchVideos()" class="search-btn">
+                    <span id="searchBtnText">🔍 Search</span>
+                    <span id="searchSpinner" class="loading-spinner hidden"></span>
+                </button>
+            </div>
+            <p id="placeholderText">Enter a topic to discover videos</p>
         </div>
     </div>
 
@@ -165,6 +164,7 @@
         const player = document.getElementById('player');
         const counter = document.getElementById('counter');
         const placeholder = document.getElementById('placeholder');
+        const placeholderText = document.getElementById('placeholderText');
         const tagInput = document.getElementById('tagInput');
         const searchBtn = document.getElementById('searchBtn');
         const searchBtnText = document.getElementById('searchBtnText');
@@ -182,8 +182,7 @@
             searchBtnText.classList.add('hidden');
             searchSpinner.classList.remove('hidden');
             counter.innerText = 'Searching for videos...';
-            placeholder.innerText = 'Loading videos...';
-            placeholder.classList.remove('hidden');
+            placeholderText.innerText = 'Loading videos...';
             player.src = '';
             
             try {
@@ -206,15 +205,13 @@
                     loadVideo(0);
                 } else {
                     counter.innerText = 'No videos found for this topic';
-                    placeholder.innerText = 'No videos found. Try a different topic.';
-                    placeholder.classList.remove('hidden');
+                    placeholderText.innerText = 'No videos found. Try a different topic.';
                     videoIds = [];
                 }
             } catch (error) {
                 console.error('Error fetching videos:', error);
                 counter.innerText = 'Error loading videos';
-                placeholder.innerText = `Error: ${error.message}. Please try again.`;
-                placeholder.classList.remove('hidden');
+                placeholderText.innerText = `Error: ${error.message}. Please try again.`;
             } finally {
                 // Reset loading state
                 isLoading = false;
