@@ -36,22 +36,51 @@ def filter_shorts(youtube, video_ids):
         response = request.execute()
         
         for item in response.get('items', []):
-            # Skip videos that can't be embedded
+            video_id = item['id']
             status = item.get('status', {})
+            content_details = item.get('contentDetails', {})
+            
+            # Skip videos that can't be embedded
             if not status.get('embeddable', False):
+                print(f"Skipping {video_id}: not embeddable", flush=True)
                 continue
             
             # Skip private or unlisted videos that may not play
             privacy = status.get('privacyStatus', '')
             if privacy != 'public':
+                print(f"Skipping {video_id}: not public ({privacy})", flush=True)
                 continue
             
-            duration_str = item['contentDetails']['duration']
+            # Skip videos that aren't fully processed
+            upload_status = status.get('uploadStatus', '')
+            if upload_status != 'processed':
+                print(f"Skipping {video_id}: not processed ({upload_status})", flush=True)
+                continue
+            
+            # Skip age-restricted content (requires sign-in to embed)
+            content_rating = content_details.get('contentRating', {})
+            if content_rating.get('ytRating') == 'ytAgeRestricted':
+                print(f"Skipping {video_id}: age restricted", flush=True)
+                continue
+            
+            # Skip region-blocked videos (check if blocked in major regions)
+            region_restriction = content_details.get('regionRestriction', {})
+            blocked = region_restriction.get('blocked', [])
+            if blocked and any(r in blocked for r in ['US', 'GB', 'CA']):
+                print(f"Skipping {video_id}: region blocked", flush=True)
+                continue
+            # If 'allowed' is set, video is ONLY available in those regions
+            allowed = region_restriction.get('allowed', [])
+            if allowed and not any(r in allowed for r in ['US', 'GB', 'CA', 'AU', 'NZ', 'IE', 'DE', 'FR', 'NL', 'SE']):
+                print(f"Skipping {video_id}: not allowed in target regions", flush=True)
+                continue
+            
+            duration_str = content_details.get('duration', 'PT0S')
             # Parse ISO 8601 duration (e.g., "PT45S" = 45 seconds)
             duration = isodate.parse_duration(duration_str).total_seconds()
             if duration <= MAX_SHORT_DURATION:
                 view_count = int(item.get('statistics', {}).get('viewCount', 0))
-                shorts.append((item['id'], view_count))
+                shorts.append((video_id, view_count))
     
     # Sort by view count descending (most popular first)
     shorts.sort(key=lambda x: x[1], reverse=True)
