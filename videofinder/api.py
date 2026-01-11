@@ -18,9 +18,11 @@ def get_videos():
     Get video IDs based on search tags.
     Query params:
         - tag: The search tag (required)
+        - page_token: Token for fetching next page of results (optional)
     """
     tag = request.args.get('tag', '')
-    log(f"[SEARCH] Received search request for: '{tag}'")
+    page_token = request.args.get('page_token', None)
+    log(f"[SEARCH] Received search request for: '{tag}' (page_token: {page_token})")
     
     if not tag:
         log("[SEARCH] Error: No tag provided")
@@ -28,12 +30,13 @@ def get_videos():
     
     try:
         log(f"[SEARCH] Calling find_videos with tag: '{tag}'")
-        video_ids = find_videos([tag])
+        video_ids, next_page_token = find_videos([tag], page_token)
         log(f"[SEARCH] Found {len(video_ids)} videos for '{tag}'")
         return jsonify({
             'tag': tag,
             'videos': video_ids,
-            'count': len(video_ids)
+            'count': len(video_ids),
+            'next_page_token': next_page_token
         })
     except Exception as e:
         log(f"[SEARCH] Error searching for '{tag}': {e}")

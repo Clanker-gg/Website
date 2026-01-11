@@ -72,10 +72,11 @@ def filter_shorts(youtube, video_ids):
     return [video_id for video_id, _ in shorts]
 
 
-def search_tag(tag):
-    """Search for a single tag and return video IDs (Shorts only)."""
+def search_tag(tag, page_token=None):
+    """Search for a single tag and return video IDs (Shorts only) and next page token."""
     youtube = get_youtube_client()
     candidate_ids = set()  # Use set to avoid duplicates across regions
+    next_page_token = None
     
     # Multiple search strategies to find better content
     search_queries = [
@@ -90,17 +91,25 @@ def search_tag(tag):
             
             # Search across multiple regions
             for region in SEARCH_REGIONS[:3]:  # Top 3 regions to save quota
-                request = youtube.search().list(
-                    q=search_query,
-                    part='id',
-                    type='video',
-                    videoDuration='short',  # Videos under 4 minutes (pre-filter)
-                    maxResults=15,
-                    regionCode=region,
-                    relevanceLanguage='en',
-                    safeSearch='moderate'
-                )
+                search_params = {
+                    'q': search_query,
+                    'part': 'id',
+                    'type': 'video',
+                    'videoDuration': 'short',  # Videos under 4 minutes (pre-filter)
+                    'maxResults': 15,
+                    'regionCode': region,
+                    'relevanceLanguage': 'en',
+                    'safeSearch': 'moderate'
+                }
+                if page_token:
+                    search_params['pageToken'] = page_token
+                
+                request = youtube.search().list(**search_params)
                 response = request.execute()
+                
+                # Store next page token from last response
+                if 'nextPageToken' in response:
+                    next_page_token = response['nextPageToken']
                 
                 # Extract video IDs
                 for item in response.get('items', []):
@@ -113,26 +122,29 @@ def search_tag(tag):
         print(f"Found {len(candidate_list)} unique candidates, filtering for Shorts...", flush=True)
         shorts = filter_shorts(youtube, candidate_list)
         print(f"Filtered to {len(shorts)} actual Shorts", flush=True)
-        return shorts
+        return shorts, next_page_token
                     
     except Exception as e:
         print(f"Error searching YouTube: {e}", flush=True)
     
-    return []
+    return [], None
 
 
-def find_videos(tags):
-    """Find videos for multiple tags."""
+def find_videos(tags, page_token=None):
+    """Find videos for multiple tags. Returns (video_ids, next_page_token)."""
     id_list = []
+    next_page_token = None
     
     for tag in tags:
         try:
-            result = search_tag(tag)  # Pass tag directly, search_tag handles variations
+            result, token = search_tag(tag, page_token)  # Pass tag directly, search_tag handles variations
             id_list.extend(result)
+            if token:
+                next_page_token = token
             print(f"Found {len(result)} videos for {tag}", flush=True) 
         except Exception as e:
             print(f"Error searching {tag}: {e}", flush=True)
     
     # Videos are already sorted by popularity within each tag
     # Keep them in order (most popular from each tag first)
-    return id_list
+    return id_list, next_page_token
