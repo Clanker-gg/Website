@@ -9,6 +9,9 @@ API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
 # Max duration for Shorts (60 seconds)
 MAX_SHORT_DURATION = 60
 
+# Regions to search (developed English-speaking + major developed nations)
+SEARCH_REGIONS = ['US', 'GB', 'CA', 'AU', 'NZ', 'IE', 'DE', 'FR', 'NL', 'SE']
+
 
 def get_youtube_client():
     """Create YouTube API client."""
@@ -45,52 +48,37 @@ def filter_shorts(youtube, video_ids):
 def search_tag(tag):
     """Search for a single tag and return video IDs (Shorts only)."""
     youtube = get_youtube_client()
-    candidate_ids = []
+    candidate_ids = set()  # Use set to avoid duplicates across regions
     
     # Use #shorts hashtag to target Shorts specifically
     search_query = f"{tag} #shorts English"
     print(f"Searching for: {search_query}", flush=True)
     
     try:
-        # Search for videos - get up to 50 results per request
-        request = youtube.search().list(
-            q=search_query,
-            part='id',
-            type='video',
-            videoDuration='short',  # Videos under 4 minutes (pre-filter)
-            maxResults=50,
-            relevanceLanguage='en',
-            safeSearch='moderate'
-        )
-        response = request.execute()
-        
-        # Extract video IDs
-        for item in response.get('items', []):
-            video_id = item['id'].get('videoId')
-            if video_id:
-                candidate_ids.append(video_id)
-        
-        # Get next page if available
-        if 'nextPageToken' in response and len(candidate_ids) < 100:
+        # Search across multiple regions
+        for region in SEARCH_REGIONS:
             request = youtube.search().list(
                 q=search_query,
                 part='id',
                 type='video',
-                videoDuration='short',
-                maxResults=50,
+                videoDuration='short',  # Videos under 4 minutes (pre-filter)
+                maxResults=25,  # Fewer per region since we're searching multiple
+                regionCode=region,
                 relevanceLanguage='en',
-                safeSearch='moderate',
-                pageToken=response['nextPageToken']
+                safeSearch='moderate'
             )
             response = request.execute()
+            
+            # Extract video IDs
             for item in response.get('items', []):
                 video_id = item['id'].get('videoId')
                 if video_id:
-                    candidate_ids.append(video_id)
+                    candidate_ids.add(video_id)
         
         # Filter to actual Shorts (under 60 seconds)
-        print(f"Found {len(candidate_ids)} candidates, filtering for Shorts...", flush=True)
-        shorts = filter_shorts(youtube, candidate_ids)
+        candidate_list = list(candidate_ids)
+        print(f"Found {len(candidate_list)} candidates from {len(SEARCH_REGIONS)} regions, filtering for Shorts...", flush=True)
+        shorts = filter_shorts(youtube, candidate_list)
         print(f"Filtered to {len(shorts)} actual Shorts", flush=True)
         return shorts
                     
