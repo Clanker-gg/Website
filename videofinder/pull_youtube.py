@@ -21,7 +21,7 @@ def get_youtube_client():
 
 
 def filter_shorts(youtube, video_ids):
-    """Filter video IDs to only include actual Shorts (under 60 seconds), sorted by popularity."""
+    """Filter video IDs to only include embeddable Shorts (under 60 seconds), sorted by popularity."""
     if not video_ids:
         return []
     
@@ -30,12 +30,22 @@ def filter_shorts(youtube, video_ids):
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i+50]
         request = youtube.videos().list(
-            part='contentDetails,statistics',
+            part='contentDetails,statistics,status',
             id=','.join(batch)
         )
         response = request.execute()
         
         for item in response.get('items', []):
+            # Skip videos that can't be embedded
+            status = item.get('status', {})
+            if not status.get('embeddable', False):
+                continue
+            
+            # Skip private or unlisted videos that may not play
+            privacy = status.get('privacyStatus', '')
+            if privacy != 'public':
+                continue
+            
             duration_str = item['contentDetails']['duration']
             # Parse ISO 8601 duration (e.g., "PT45S" = 45 seconds)
             duration = isodate.parse_duration(duration_str).total_seconds()
