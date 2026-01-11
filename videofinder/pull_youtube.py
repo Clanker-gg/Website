@@ -21,7 +21,7 @@ def get_youtube_client():
 
 
 def filter_shorts(youtube, video_ids):
-    """Filter video IDs to only include embeddable Shorts (under 60 seconds), sorted by popularity."""
+    """Filter video IDs to only include playable Shorts (under 60 seconds), sorted by popularity."""
     if not video_ids:
         return []
     
@@ -40,11 +40,6 @@ def filter_shorts(youtube, video_ids):
             status = item.get('status', {})
             content_details = item.get('contentDetails', {})
             
-            # Skip videos that can't be embedded
-            if not status.get('embeddable', False):
-                print(f"Skipping {video_id}: not embeddable", flush=True)
-                continue
-            
             # Skip private or unlisted videos that may not play
             privacy = status.get('privacyStatus', '')
             if privacy != 'public':
@@ -61,18 +56,6 @@ def filter_shorts(youtube, video_ids):
             content_rating = content_details.get('contentRating', {})
             if content_rating.get('ytRating') == 'ytAgeRestricted':
                 print(f"Skipping {video_id}: age restricted", flush=True)
-                continue
-            
-            # Skip region-blocked videos (check if blocked in major regions)
-            region_restriction = content_details.get('regionRestriction', {})
-            blocked = region_restriction.get('blocked', [])
-            if blocked and any(r in blocked for r in ['US', 'GB', 'CA']):
-                print(f"Skipping {video_id}: region blocked", flush=True)
-                continue
-            # If 'allowed' is set, video is ONLY available in those regions
-            allowed = region_restriction.get('allowed', [])
-            if allowed and not any(r in allowed for r in ['US', 'GB', 'CA', 'AU', 'NZ', 'IE', 'DE', 'FR', 'NL', 'SE']):
-                print(f"Skipping {video_id}: not allowed in target regions", flush=True)
                 continue
             
             duration_str = content_details.get('duration', 'PT0S')

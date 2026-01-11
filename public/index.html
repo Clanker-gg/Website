@@ -73,6 +73,14 @@
             height: 100%;
             border-radius: 20px;
         }
+        .video-container #player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+        }
         .search-container {
             display: flex;
             gap: 1rem;
@@ -295,13 +303,7 @@
         </div>
 
         <div class="video-container">
-            <iframe 
-                id="player" 
-                src="" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-            </iframe>
+            <div id="player"></div>
             <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1e1e2e] to-[#252538] text-gray-400">
                 <div class="placeholder-content">
                     <div class="flex justify-center mb-6">
@@ -363,6 +365,8 @@
         let videoIds = [];
         let currentIndex = 0;
         let isLoading = false;
+        let skipTimeout = null;
+        let ytPlayer = null;
         
         const player = document.getElementById('player');
         const counter = document.getElementById('counter');
@@ -374,6 +378,17 @@
         const searchSpinner = document.getElementById('searchSpinner');
         const currentTagDisplay = document.getElementById('currentTagDisplay');
         const currentTagSpan = document.getElementById('currentTag');
+
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Called when YouTube API is ready
+        function onYouTubeIframeAPIReady() {
+            console.log('YouTube API ready');
+        }
 
         function fillSearch(topic) {
             tagInput.value = topic;
@@ -432,6 +447,12 @@
         function loadVideo(index) {
             if (videoIds.length === 0) return;
             
+            // Clear any pending skip timeout
+            if (skipTimeout) {
+                clearTimeout(skipTimeout);
+                skipTimeout = null;
+            }
+            
             // Bounds checking
             if (index < 0) index = 0;
             if (index >= videoIds.length) index = videoIds.length - 1;
@@ -439,11 +460,85 @@
             currentIndex = index;
             const videoId = videoIds[currentIndex];
             
-            // Embed URL with autoplay enabled for smoother transitions
-            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            // Destroy old player if exists
+            if (ytPlayer) {
+                ytPlayer.destroy();
+                ytPlayer = null;
+            }
+            
             placeholder.classList.add('hidden');
             
+            // Create new YouTube player with event handlers
+            ytPlayer = new YT.Player('player', {
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1,
+                    rel: 0,
+                    modestbranding: 1
+                },
+                events: {
+                    onReady: onPlayerReady,
+                    onStateChange: onPlayerStateChange,
+                    onError: onPlayerError
+                }
+            });
+            
             updateCounter();
+        }
+        
+        function onPlayerReady(event) {
+            // Player loaded successfully, clear any skip timeout
+            if (skipTimeout) {
+                clearTimeout(skipTimeout);
+                skipTimeout = null;
+            }
+        }
+        
+        function onPlayerStateChange(event) {
+            // YT.PlayerState.UNSTARTED = -1, could indicate unavailable video
+            // If video is unstarted for too long, skip it
+            if (event.data === -1) {
+                // Set a timeout - if still unstarted after 3 seconds, skip
+                skipTimeout = setTimeout(() => {
+                    console.log('Video appears unavailable, skipping...');
+                    skipUnavailableVideo();
+                }, 3000);
+            } else if (event.data === YT.PlayerState.PLAYING) {
+                // Video is playing, clear any skip timeout
+                if (skipTimeout) {
+                    clearTimeout(skipTimeout);
+                    skipTimeout = null;
+                }
+            }
+        }
+        
+        function onPlayerError(event) {
+            // Error codes: 2 = invalid video ID, 5 = HTML5 error, 100 = not found, 
+            // 101/150 = embedding not allowed
+            console.log('Player error:', event.data, '- skipping video');
+            skipUnavailableVideo();
+        }
+        
+        function skipUnavailableVideo() {
+            // Remove the bad video from the list
+            const badVideoId = videoIds[currentIndex];
+            console.log(`Removing unavailable video: ${badVideoId}`);
+            videoIds.splice(currentIndex, 1);
+            
+            if (videoIds.length === 0) {
+                counter.innerHTML = '<span class="counter-badge">😔 No playable videos found</span>';
+                placeholder.classList.remove('hidden');
+                placeholderText.innerText = 'All videos were unavailable. Try a different topic.';
+                return;
+            }
+            
+            // Adjust index if needed
+            if (currentIndex >= videoIds.length) {
+                currentIndex = 0;
+            }
+            
+            // Load next video
+            loadVideo(currentIndex);
         }
 
         function updateCounter() {
