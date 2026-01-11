@@ -1,23 +1,53 @@
 import os
-import random
+import json
+import hashlib
+from pathlib import Path
 import isodate
 from googleapiclient.discovery import build
-
-# Get API key from environment variable
-API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
 
 # Max duration for Shorts (60 seconds)
 MAX_SHORT_DURATION = 60
 
-# Regions to search (developed English-speaking + major developed nations)
-SEARCH_REGIONS = ['US', 'GB', 'CA', 'AU', 'NZ', 'IE', 'DE', 'FR', 'NL', 'SE']
+# Cache directory
+CACHE_DIR = Path('/tmp/youtube_cache')
+CACHE_DIR.mkdir(exist_ok=True)
 
 
-def get_youtube_client():
-    """Create YouTube API client."""
-    if not API_KEY:
-        raise ValueError("YOUTUBE_API_KEY environment variable not set")
-    return build('youtube', 'v3', developerKey=API_KEY)
+def get_cache_key(tag, page_token=None):
+    """Generate a cache key for a search."""
+    key = f"{tag}:{page_token or 'first'}"
+    return hashlib.md5(key.encode()).hexdigest()
+
+
+def get_cached_results(tag, page_token=None):
+    """Get cached results if available."""
+    cache_file = CACHE_DIR / f"{get_cache_key(tag, page_token)}.json"
+    if cache_file.exists():
+        try:
+            with open(cache_file, 'r') as f:
+                data = json.load(f)
+                print(f"Cache hit for '{tag}'", flush=True)
+                return data['videos'], data.get('next_page_token')
+        except Exception:
+            pass
+    return None, None
+
+
+def save_to_cache(tag, videos, next_page_token, page_token=None):
+    """Save results to cache."""
+    cache_file = CACHE_DIR / f"{get_cache_key(tag, page_token)}.json"
+    try:
+        with open(cache_file, 'w') as f:
+            json.dump({'videos': videos, 'next_page_token': next_page_token}, f)
+    except Exception as e:
+        print(f"Failed to cache: {e}", flush=True)
+
+
+def get_youtube_client(api_key):
+    """Create YouTube API client with provided API key."""
+    if not api_key:
+        raise ValueError("No API key provided")
+    return build('youtube', 'v3', developerKey=api_key)
 
 
 def filter_shorts(youtube, video_ids):
@@ -43,19 +73,16 @@ def filter_shorts(youtube, video_ids):
             # Skip private or unlisted videos that may not play
             privacy = status.get('privacyStatus', '')
             if privacy != 'public':
-                print(f"Skipping {video_id}: not public ({privacy})", flush=True)
                 continue
             
             # Skip videos that aren't fully processed
             upload_status = status.get('uploadStatus', '')
             if upload_status != 'processed':
-                print(f"Skipping {video_id}: not processed ({upload_status})", flush=True)
                 continue
             
             # Skip age-restricted content (requires sign-in to embed)
             content_rating = content_details.get('contentRating', {})
             if content_rating.get('ytRating') == 'ytAgeRestricted':
-                print(f"Skipping {video_id}: age restricted", flush=True)
                 continue
             
             duration_str = content_details.get('duration', 'PT0S')
@@ -72,56 +99,56 @@ def filter_shorts(youtube, video_ids):
     return [video_id for video_id, _ in shorts]
 
 
-def search_tag(tag, page_token=None):
+def search_tag(tag, page_token=None, api_key=None):
     """Search for a single tag and return video IDs (Shorts only) and next page token."""
-    youtube = get_youtube_client()
-    candidate_ids = set()  # Use set to avoid duplicates across regions
+    
+    # Check cache first
+    cached_videos, cached_token = get_cached_results(tag, page_token)
+    if cached_videos is not None:
+        return cached_videos, cached_token
+    
+    youtube = get_youtube_client(api_key)
+    candidate_ids = set()
     next_page_token = None
     
-    # Multiple search strategies to find better content
-    search_queries = [
-        f"{tag}",                    # Direct search (most natural)
-        f"{tag} explained",          # Educational framing
-        f"{tag} tutorial",           # Tutorial content
-    ]
-    
     try:
-        for search_query in search_queries:
-            print(f"Searching for: {search_query}", flush=True)
-            
-            # Search across multiple regions
-            for region in SEARCH_REGIONS[:3]:  # Top 3 regions to save quota
-                search_params = {
-                    'q': search_query,
-                    'part': 'id',
-                    'type': 'video',
-                    'videoDuration': 'short',  # Videos under 4 minutes (pre-filter)
-                    'maxResults': 15,
-                    'regionCode': region,
-                    'relevanceLanguage': 'en',
-                    'safeSearch': 'moderate'
-                }
-                if page_token:
-                    search_params['pageToken'] = page_token
-                
-                request = youtube.search().list(**search_params)
-                response = request.execute()
-                
-                # Store next page token from last response
-                if 'nextPageToken' in response:
-                    next_page_token = response['nextPageToken']
-                
-                # Extract video IDs
-                for item in response.get('items', []):
-                    video_id = item['id'].get('videoId')
-                    if video_id:
-                        candidate_ids.add(video_id)
+        # Single optimized search - let YouTube handle relevance
+        search_params = {
+            'q': f"{tag} shorts",
+            'part': 'id',
+            'type': 'video',
+            'videoDuration': 'short',
+            'maxResults': 50,  # Max allowed per request
+            'regionCode': 'US',
+            'relevanceLanguage': 'en',
+            'safeSearch': 'moderate',
+            'order': 'relevance'
+        }
+        if page_token:
+            search_params['pageToken'] = page_token
+        
+        print(f"Searching for: {tag}", flush=True)
+        request = youtube.search().list(**search_params)
+        response = request.execute()
+        
+        # Store next page token
+        next_page_token = response.get('nextPageToken')
+        
+        # Extract video IDs
+        for item in response.get('items', []):
+            video_id = item['id'].get('videoId')
+            if video_id:
+                candidate_ids.add(video_id)
         
         # Filter to actual Shorts (under 60 seconds)
         candidate_list = list(candidate_ids)
-        print(f"Found {len(candidate_list)} unique candidates, filtering for Shorts...", flush=True)
+        print(f"Found {len(candidate_list)} candidates, filtering...", flush=True)
         shorts = filter_shorts(youtube, candidate_list)
-        print(f"Filtered to {len(shorts)} actual Shorts", flush=True)
+        print(f"Filtered to {len(shorts)} Shorts", flush=True)
+        
+        # Cache the results
+        save_to_cache(tag, shorts, next_page_token, page_token)
+        
         return shorts, next_page_token
                     
     except Exception as e:
@@ -130,14 +157,14 @@ def search_tag(tag, page_token=None):
     return [], None
 
 
-def find_videos(tags, page_token=None):
+def find_videos(tags, page_token=None, api_key=None):
     """Find videos for multiple tags. Returns (video_ids, next_page_token)."""
     id_list = []
     next_page_token = None
     
     for tag in tags:
         try:
-            result, token = search_tag(tag, page_token)  # Pass tag directly, search_tag handles variations
+            result, token = search_tag(tag, page_token, api_key)
             id_list.extend(result)
             if token:
                 next_page_token = token
@@ -145,6 +172,4 @@ def find_videos(tags, page_token=None):
         except Exception as e:
             print(f"Error searching {tag}: {e}", flush=True)
     
-    # Videos are already sorted by popularity within each tag
-    # Keep them in order (most popular from each tag first)
     return id_list, next_page_token
