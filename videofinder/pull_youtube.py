@@ -21,16 +21,16 @@ def get_youtube_client():
 
 
 def filter_shorts(youtube, video_ids):
-    """Filter video IDs to only include actual Shorts (under 60 seconds)."""
+    """Filter video IDs to only include actual Shorts (under 60 seconds), sorted by popularity."""
     if not video_ids:
         return []
     
-    shorts = []
+    shorts = []  # List of (video_id, view_count) tuples
     # API allows up to 50 IDs per request
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i+50]
         request = youtube.videos().list(
-            part='contentDetails',
+            part='contentDetails,statistics',
             id=','.join(batch)
         )
         response = request.execute()
@@ -40,9 +40,14 @@ def filter_shorts(youtube, video_ids):
             # Parse ISO 8601 duration (e.g., "PT45S" = 45 seconds)
             duration = isodate.parse_duration(duration_str).total_seconds()
             if duration <= MAX_SHORT_DURATION:
-                shorts.append(item['id'])
+                view_count = int(item.get('statistics', {}).get('viewCount', 0))
+                shorts.append((item['id'], view_count))
     
-    return shorts
+    # Sort by view count descending (most popular first)
+    shorts.sort(key=lambda x: x[1], reverse=True)
+    
+    # Return just the video IDs in sorted order
+    return [video_id for video_id, _ in shorts]
 
 
 def search_tag(tag):
@@ -50,34 +55,40 @@ def search_tag(tag):
     youtube = get_youtube_client()
     candidate_ids = set()  # Use set to avoid duplicates across regions
     
-    # Use #shorts hashtag to target Shorts specifically
-    search_query = f"{tag} #shorts English"
-    print(f"Searching for: {search_query}", flush=True)
+    # Multiple search strategies to find better content
+    search_queries = [
+        f"{tag}",                    # Direct search (most natural)
+        f"{tag} explained",          # Educational framing
+        f"{tag} tutorial",           # Tutorial content
+    ]
     
     try:
-        # Search across multiple regions
-        for region in SEARCH_REGIONS:
-            request = youtube.search().list(
-                q=search_query,
-                part='id',
-                type='video',
-                videoDuration='short',  # Videos under 4 minutes (pre-filter)
-                maxResults=25,  # Fewer per region since we're searching multiple
-                regionCode=region,
-                relevanceLanguage='en',
-                safeSearch='moderate'
-            )
-            response = request.execute()
+        for search_query in search_queries:
+            print(f"Searching for: {search_query}", flush=True)
             
-            # Extract video IDs
-            for item in response.get('items', []):
-                video_id = item['id'].get('videoId')
-                if video_id:
-                    candidate_ids.add(video_id)
+            # Search across multiple regions
+            for region in SEARCH_REGIONS[:3]:  # Top 3 regions to save quota
+                request = youtube.search().list(
+                    q=search_query,
+                    part='id',
+                    type='video',
+                    videoDuration='short',  # Videos under 4 minutes (pre-filter)
+                    maxResults=15,
+                    regionCode=region,
+                    relevanceLanguage='en',
+                    safeSearch='moderate'
+                )
+                response = request.execute()
+                
+                # Extract video IDs
+                for item in response.get('items', []):
+                    video_id = item['id'].get('videoId')
+                    if video_id:
+                        candidate_ids.add(video_id)
         
         # Filter to actual Shorts (under 60 seconds)
         candidate_list = list(candidate_ids)
-        print(f"Found {len(candidate_list)} candidates from {len(SEARCH_REGIONS)} regions, filtering for Shorts...", flush=True)
+        print(f"Found {len(candidate_list)} unique candidates, filtering for Shorts...", flush=True)
         shorts = filter_shorts(youtube, candidate_list)
         print(f"Filtered to {len(shorts)} actual Shorts", flush=True)
         return shorts
@@ -94,11 +105,12 @@ def find_videos(tags):
     
     for tag in tags:
         try:
-            result = search_tag(f"Learn {tag}")
+            result = search_tag(tag)  # Pass tag directly, search_tag handles variations
             id_list.extend(result)
             print(f"Found {len(result)} videos for {tag}", flush=True) 
         except Exception as e:
             print(f"Error searching {tag}: {e}", flush=True)
     
-    random.shuffle(id_list)
+    # Videos are already sorted by popularity within each tag
+    # Keep them in order (most popular from each tag first)
     return id_list
