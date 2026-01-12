@@ -409,8 +409,8 @@
     </button>
 
     <!-- API Key Setup Modal -->
-    <div id="apiKeyModal" class="modal-overlay hidden">
-        <div class="modal-content">
+    <div id="apiKeyModal" class="modal-overlay hidden" onclick="if(event.target === this) closeSettingsModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
             <h2>🔑 YouTube API Key Setup</h2>
             <p>To use this app, you need your own free YouTube API key. This gives you 10,000 units/day (about 100+ searches).</p>
             
