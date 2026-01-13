@@ -763,19 +763,8 @@
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            const apiKeyInput = document.getElementById('apiKeyInput');
-            const apiKeyModal = document.getElementById('apiKeyModal');
-            
-            // Close modal on Escape key
-            if (e.key === 'Escape' && !apiKeyModal.classList.contains('hidden')) {
-                closeSettingsModal();
-                return;
-            }
-            
-            // Don't navigate if typing in the search input or API key input, or if modal is open
-            if (document.activeElement === tagInput || 
-                document.activeElement === apiKeyInput ||
-                !apiKeyModal.classList.contains('hidden')) {
+            // Don't navigate if typing in the search input
+            if (document.activeElement === tagInput) {
                 return;
             }
             
