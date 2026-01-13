@@ -5,24 +5,22 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    restart: unless-stopped
     volumes:
       - ./public:/srv
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+    networks:
+      - app-net
     depends_on:
       - api
 
   api:
     build: ./videofinder
     container_name: videoapi
-    restart: unless-stopped
-    expose:
-      - "5000"
     environment:
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    networks:
+      - app-net
 
-volumes:
-  caddy_data:
-  caddy_config:
+networks:
+  app-net:
+    driver: bridge
