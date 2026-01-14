@@ -1,3 +1,4 @@
+import os
 import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -6,6 +7,9 @@ from pull_youtube import find_videos
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
+
+# API key from environment variable (set in docker-compose.yml)
+API_KEY = os.environ.get('YOUTUBE_API_KEY', '')
 
 
 def log(message):
@@ -20,24 +24,22 @@ def get_videos():
     Query params:
         - tag: The search tag (required)
         - page_token: Token for fetching next page of results (optional)
-        - api_key: User's YouTube API key (required)
     """
     tag = request.args.get('tag', '')
     page_token = request.args.get('page_token', None)
-    api_key = request.args.get('api_key', '')
     log(f"[SEARCH] Received search request for: '{tag}' (page_token: {page_token})")
     
     if not tag:
         log("[SEARCH] Error: No tag provided")
         return jsonify({'error': 'No tag provided'}), 400
     
-    if not api_key:
-        log("[SEARCH] Error: No API key provided")
-        return jsonify({'error': 'No API key provided. Please add your YouTube API key in settings.'}), 400
+    if not API_KEY:
+        log("[SEARCH] Error: No API key configured on server")
+        return jsonify({'error': 'Server API key not configured. Please contact the administrator.'}), 500
     
     try:
         log(f"[SEARCH] Calling find_videos with tag: '{tag}'")
-        video_ids, next_page_token = find_videos([tag], page_token, api_key)
+        video_ids, next_page_token = find_videos([tag], page_token, API_KEY)
         log(f"[SEARCH] Found {len(video_ids)} videos for '{tag}'")
         return jsonify({
             'tag': tag,
@@ -47,10 +49,10 @@ def get_videos():
         })
     except HttpError as e:
         if e.resp.status == 403 and 'quotaExceeded' in str(e):
-            log(f"[SEARCH] Quota exceeded for API key")
+            log(f"[SEARCH] Quota exceeded")
             return jsonify({
                 'error': 'quota_exceeded',
-                'message': 'YouTube API quota exceeded. The daily limit has been reached. Please try again tomorrow or use a different API key.'
+                'message': 'YouTube API quota exceeded. Please try again tomorrow.'
             }), 429
         log(f"[SEARCH] YouTube API error for '{tag}': {e}")
         return jsonify({'error': str(e)}), 500
@@ -60,4 +62,6 @@ def get_videos():
 
 
 if __name__ == '__main__':
+    if not API_KEY:
+        log("WARNING: YOUTUBE_API_KEY environment variable not set!")
     app.run(host='0.0.0.0', port=5000, debug=True)
