@@ -7,7 +7,7 @@ services:
       - "443:443"
     restart: unless-stopped
     volumes:
-      - ./public:/srv
+      - ./frontend/public:/srv
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
