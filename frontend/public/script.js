@@ -22,62 +22,6 @@ const searchSpinner = document.getElementById('searchSpinner');
 const currentTagDisplay = document.getElementById('currentTagDisplay');
 const currentTagSpan = document.getElementById('currentTag');
 
-// API Key Management
-function getApiKey() {
-    return localStorage.getItem('youtube_api_key') || '';
-}
-
-function saveApiKey() {
-    const key = document.getElementById('apiKeyInput').value.trim();
-    if (key) {
-        localStorage.setItem('youtube_api_key', key);
-        updateApiStatus();
-        closeSettingsModal();
-    } else {
-        alert('Please enter a valid API key');
-    }
-}
-
-function clearApiKey() {
-    localStorage.removeItem('youtube_api_key');
-    document.getElementById('apiKeyInput').value = '';
-    updateApiStatus();
-}
-
-function updateApiStatus() {
-    const key = getApiKey();
-    const dot = document.getElementById('apiStatusDot');
-    const text = document.getElementById('apiStatusText');
-    
-    if (key) {
-        dot.classList.remove('disconnected');
-        dot.classList.add('connected');
-        text.textContent = 'API key configured (' + key.substring(0, 8) + '...)';
-    } else {
-        dot.classList.remove('connected');
-        dot.classList.add('disconnected');
-        text.textContent = 'No API key configured';
-    }
-}
-
-function openSettingsModal() {
-    document.getElementById('apiKeyModal').classList.remove('hidden');
-    document.getElementById('apiKeyInput').value = getApiKey();
-    updateApiStatus();
-}
-
-function closeSettingsModal() {
-    document.getElementById('apiKeyModal').classList.add('hidden');
-}
-
-// Check for API key on load, show modal if not set
-window.addEventListener('load', () => {
-    if (!getApiKey()) {
-        openSettingsModal();
-    }
-    updateApiStatus();
-});
-
 // Called when YouTube API is ready
 function onYouTubeIframeAPIReady() {
     console.log('YouTube API ready');
@@ -92,13 +36,6 @@ async function searchVideos() {
     const tag = tagInput.value.trim();
     if (!tag || isLoading) return;
     
-    // Check for API key
-    const apiKey = getApiKey();
-    if (!apiKey) {
-        openSettingsModal();
-        return;
-    }
-    
     // Show loading state
     isLoading = true;
     searchBtn.disabled = true;
@@ -109,7 +46,7 @@ async function searchVideos() {
     player.src = '';
     
     try {
-        const response = await fetch(`${API_URL}?tag=${encodeURIComponent(tag)}&api_key=${encodeURIComponent(apiKey)}`);
+        const response = await fetch(`${API_URL}?tag=${encodeURIComponent(tag)}`);
         const data = await response.json();
         
         if (!response.ok) {
@@ -139,9 +76,8 @@ async function searchVideos() {
             counter.innerHTML = '<span class="counter-badge">⚠️ API Quota Exceeded</span>';
             placeholderText.innerHTML = `
                 <div style="text-align: center; max-width: 400px;">
-                    <p style="margin-bottom: 1rem;">Your YouTube API quota has been exceeded for today.</p>
-                    <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.8;">The quota resets at midnight Pacific Time.</p>
-                    <button onclick="openSettingsModal()" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 0.75rem 1.5rem; border-radius: 12px; border: none; cursor: pointer; font-weight: 500;">Use Different API Key</button>
+                    <p style="margin-bottom: 1rem;">API quota has been exceeded for today.</p>
+                    <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.8;">The quota resets at midnight Pacific Time. Please try again later.</p>
                 </div>
             `;
         } else {

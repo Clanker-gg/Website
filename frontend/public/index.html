@@ -12,62 +12,6 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center">
 
-    <!-- Settings Button -->
-    <button onclick="openSettingsModal()" class="settings-btn" title="API Settings">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-            <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-        </svg>
-    </button>
-
-    <!-- API Key Setup Modal -->
-    <div id="apiKeyModal" class="modal-overlay hidden" onclick="if(event.target === this) closeSettingsModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2>🔑 YouTube API Key Setup</h2>
-            <p>To use this app, you need your own free YouTube API key. This gives you 10,000 units/day (about 100+ searches).</p>
-            
-            <h3>Step 1: Create a Google Cloud Project</h3>
-            <ol>
-                <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
-                <li>Click <strong>"Select a project"</strong> → <strong>"New Project"</strong></li>
-                <li>Name it anything (e.g., "YouTube Shorts") and click <strong>"Create"</strong></li>
-            </ol>
-            
-            <h3>Step 2: Enable YouTube Data API</h3>
-            <ol>
-                <li>In your new project, go to <strong>"APIs & Services"</strong> → <strong>"Library"</strong></li>
-                <li>Search for <strong>"YouTube Data API v3"</strong></li>
-                <li>Click it, then click <strong>"Enable"</strong></li>
-            </ol>
-            
-            <h3>Step 3: Create API Key</h3>
-            <ol>
-                <li>Go to <strong>"APIs & Services"</strong> → <strong>"Credentials"</strong></li>
-                <li>Click <strong>"+ Create Credentials"</strong> → <strong>"API Key"</strong></li>
-                <li>Copy your new API key</li>
-                <li><em>(Optional but recommended)</em> Click "Edit API key" and restrict it to only "YouTube Data API v3"</li>
-            </ol>
-            
-            <h3>Step 4: Enter Your Key Below</h3>
-            <input type="password" id="apiKeyInput" class="api-key-input" placeholder="Paste your API key here (e.g., AIzaSy...)" />
-            
-            <div class="api-status" id="apiStatus">
-                <span class="api-status-dot disconnected" id="apiStatusDot"></span>
-                <span id="apiStatusText">No API key configured</span>
-            </div>
-            
-            <div style="margin-top: 1.5rem;">
-                <button onclick="saveApiKey()" class="modal-btn">Save Key</button>
-                <button onclick="closeSettingsModal()" class="modal-btn modal-btn-secondary">Cancel</button>
-                <button onclick="clearApiKey()" class="modal-btn modal-btn-secondary" style="float: right;">Clear Key</button>
-            </div>
-            
-            <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748b;">
-                ⚠️ Your API key is stored only in your browser's localStorage and is sent directly to YouTube. We never store or log your key.
-            </p>
-        </div>
-    </div>
-
     <div class="main-content flex flex-col items-center justify-center w-full">
         <div class="mb-8 text-center">
             <div class="flex justify-center">
