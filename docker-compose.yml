@@ -11,7 +11,7 @@ services:
       - api
 
   api:
-    build: ./videofinder
+    build: ./backend/videofinder
     container_name: videoapi
     environment:
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}

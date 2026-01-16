@@ -4,13 +4,13 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY vite.config.js ./
+COPY frontend/package*.json ./
+COPY frontend/vite.config.js ./
 
 # Install dependencies and build
 RUN npm ci
-COPY src ./src
-COPY index.html ./
+COPY frontend/src ./src
+COPY frontend/index.html ./
 RUN npm run build
 
 # Production stage

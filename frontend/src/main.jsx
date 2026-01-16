@@ -1,6 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import StudyWithClankers from './StudyWithClankers';
-import './StudyWithClankers.css';
+import App from './App';
 
-createRoot(document.getElementById('root')).render(<StudyWithClankers />);
+createRoot(document.getElementById('root')).render(<App />);
