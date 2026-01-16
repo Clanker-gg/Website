@@ -82,7 +82,10 @@ git clone https://github.com/your-org/clanker.git
 # Navigate to the project directory
 cd clanker
 
-# Install dependencies
+# To run frontend server
+cd frontend
+
+# Install dependencies inside frontend (.gitignore should ignore these files to not bloat up repo)
 npm install
 
 # Run the development server
