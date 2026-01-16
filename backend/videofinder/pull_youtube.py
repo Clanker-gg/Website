@@ -4,9 +4,13 @@ import hashlib
 from pathlib import Path
 import isodate
 from googleapiclient.discovery import build
+from transformers import pipeline
 
 # Max duration for Shorts (60 seconds)
 MAX_SHORT_DURATION = 60
+
+# Load the custom content filter model
+classifier = pipeline("text-classification", model="./my_custom_modern_filter")
 
 # Cache directory
 CACHE_DIR = Path('/tmp/youtube_cache')
@@ -50,25 +54,57 @@ def get_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
 
 
-def filter_shorts(youtube, video_ids):
-    """Filter video IDs to only include playable Shorts (under 60 seconds), sorted by popularity."""
+def filter_shorts(youtube, video_ids, search_query=None):
+    """Filter video IDs to only include playable Shorts (under 60 seconds), sorted by popularity.
+    If search_query is provided, also filters out bad content using ML classifier.
+    Also excludes videos from India."""
     if not video_ids:
         return []
+    
+    # Get channel IDs to check their country
+    channel_countries = {}
     
     shorts = []  # List of (video_id, view_count) tuples
     # API allows up to 50 IDs per request
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i+50]
         request = youtube.videos().list(
-            part='contentDetails,statistics,status',
+            part='contentDetails,statistics,status,snippet',
             id=','.join(batch)
         )
         response = request.execute()
+        
+        # Collect channel IDs from this batch
+        channel_ids = set()
+        for item in response.get('items', []):
+            channel_id = item.get('snippet', {}).get('channelId')
+            if channel_id:
+                channel_ids.add(channel_id)
+        
+        # Fetch channel details to get country
+        if channel_ids:
+            channel_request = youtube.channels().list(
+                part='snippet',
+                id=','.join(channel_ids)
+            )
+            channel_response = channel_request.execute()
+            for channel in channel_response.get('items', []):
+                channel_id = channel['id']
+                country = channel.get('snippet', {}).get('country', '')
+                channel_countries[channel_id] = country
         
         for item in response.get('items', []):
             video_id = item['id']
             status = item.get('status', {})
             content_details = item.get('contentDetails', {})
+            snippet = item.get('snippet', {})
+            title = snippet.get('title', '')
+            channel_id = snippet.get('channelId', '')
+            
+            # Skip videos from India
+            if channel_countries.get(channel_id, '').upper() == 'IN':
+                print(f"Skipping video from India: {title[:50]}...", flush=True)
+                continue
             
             # Skip private or unlisted videos that may not play
             privacy = status.get('privacyStatus', '')
@@ -89,6 +125,14 @@ def filter_shorts(youtube, video_ids):
             # Parse ISO 8601 duration (e.g., "PT45S" = 45 seconds)
             duration = isodate.parse_duration(duration_str).total_seconds()
             if duration <= MAX_SHORT_DURATION:
+                # Filter bad content using ML classifier if search_query provided
+                if search_query and title:
+                    input_text = f"{search_query} [SEP] {title}"
+                    result = classifier(input_text)
+                    if result[0]['label'] != 'LABEL_1':  # Not "Good"
+                        print(f"Skipping bad content: {title[:50]}...", flush=True)
+                        continue
+                
                 view_count = int(item.get('statistics', {}).get('viewCount', 0))
                 shorts.append((video_id, view_count))
     
@@ -140,10 +184,10 @@ def search_tag(tag, page_token=None, api_key=None):
             if video_id:
                 candidate_ids.add(video_id)
         
-        # Filter to actual Shorts (under 60 seconds)
+        # Filter to actual Shorts (under 60 seconds) and remove bad content
         candidate_list = list(candidate_ids)
         print(f"Found {len(candidate_list)} candidates, filtering...", flush=True)
-        shorts = filter_shorts(youtube, candidate_list)
+        shorts = filter_shorts(youtube, candidate_list, search_query=tag)
         print(f"Filtered to {len(shorts)} Shorts", flush=True)
         
         # Cache the results
@@ -173,3 +217,17 @@ def find_videos(tags, page_token=None, api_key=None):
             print(f"Error searching {tag}: {e}", flush=True)
     
     return id_list, next_page_token
+
+
+def filter_bad_content(search_query, titles):
+    """Filter out bad content using the ML classifier. Returns list of titles that are 'Good'."""
+    good_titles = []
+    for title in titles:
+        input_text = f"{search_query} [SEP] {title}"
+        result = classifier(input_text)
+        label = "Good" if result[0]['label'] == 'LABEL_1' else "Bad"
+        if label == "Good":
+            good_titles.append(title)
+        else:
+            print(f"Skipping bad content: {title[:50]}...", flush=True)
+    return good_titles

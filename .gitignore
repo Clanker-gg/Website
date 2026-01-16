@@ -29,3 +29,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Model
+backend/videofinder/my_custom_modern_filter
