@@ -6,3 +6,23 @@ localhost {
 		reverse_proxy api:5000
 	}
 }
+
+http://* {
+	root * /srv
+	file_server
+
+	handle /api/* {
+		reverse_proxy api:5000
+	}
+}
+
+:80 {
+    root * /usr/share/caddy
+    try_files {path} /index.html
+    file_server
+    
+    # Proxy API requests to Flask
+    handle_path /api/* {
+        reverse_proxy api:5000
+    }
+}

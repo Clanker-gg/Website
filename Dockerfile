@@ -1,0 +1,27 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY vite.config.js ./
+
+# Install dependencies and build
+RUN npm ci
+COPY src ./src
+COPY index.html ./
+RUN npm run build
+
+# Production stage
+FROM caddy:latest
+
+# Copy built files to Caddy's public directory
+COPY --from=builder /app/dist /srv
+
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80 443
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

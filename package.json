@@ -1,0 +1,31 @@
+{
+  "name": "website",
+  "version": "1.0.0",
+  "description": "Clanker is a short-form educational content app designed to make learning as engaging and effortless as scrolling. Inspired by platforms like YouTube Shorts and Instagram Reels, Clanker delivers bite-sized educational videos tailored to a user’s interests, allowing them to swipe through content and stop on what captures their attention.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clanker-gg/Website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Clanker-gg/Website/issues"
+  },
+  "homepage": "https://github.com/Clanker-gg/Website#readme",
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.3.1"
+  }
+}
