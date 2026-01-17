@@ -62,7 +62,7 @@ Clanker prioritizes educational value while maintaining the intuitive UX of mode
 
 > *(Subject to change as the project evolves)*
 
-- Frontend: TBD  
+- Frontend: ReactJS (might add TailwindCSS)
 - Backend: TBD  
 - Database: TBD  
 - Recommendation System: Custom content-based / behavioral logic  
