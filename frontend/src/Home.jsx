@@ -1,16 +1,16 @@
 import React from 'react';
 import './Home.css';
 
-export default function AIEducationLanding() {
+export default function AIEducationLanding({ onStart }) {
   return (
     <div className="ai-education">
-      {/* Header */}
+      {/* Site Header */}
       <header className="header">
         <div className="logo">
           <div className="logo-icon">
             <div className="logo-inner"></div>
           </div>
-          <span className="logo-text">AI Education</span>
+          <span className="logo-text">Clanker</span>
         </div>
         
         <nav className="nav">
@@ -21,29 +21,29 @@ export default function AIEducationLanding() {
         
         <div className="header-actions">
           <button className="btn-text">Login</button>
-          <button className="btn-primary">Get Started</button>
+          <button className="btn-primary" onClick={onStart}>Get Started</button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <div className="hero-text">
+      {/* Main Section */}
+      <section className="main">
+        <div className="main-content">
+          <div className="main-text">
             <div className="badge">
-              <span>✨ NEW: AI COURSE GENERATION 2.0</span>
+              <span>✨ NEW: AI COURSE GENERATION</span>
             </div>
             
-            <h1 className="hero-title">
+            <h1 className="main-title">
               Master Your<br />
               Subject with <span className="text-blue">AI</span>
             </h1>
             
-            <p className="hero-description">
-              Personalized learning paths designed by intelligence, refined by you. 
-              Join 50,000+ learners unlocking their full potential through custom-tailored curricula.
+            <p className="main-description">
+              Personalized learning paths designed by us, refined by you <br/>
+              Unlock your full potential through custom-tailored curricula
             </p>
             
-            <div className="hero-form">
+            <div className="main-form">
               <input
                 type="email"
                 placeholder="Enter your email"
@@ -62,7 +62,7 @@ export default function AIEducationLanding() {
             </div>
           </div>
           
-          <div className="hero-visual">
+          <div className="main-visual">
             <div className="brain-card">
               <svg viewBox="0 0 200 200" className="brain-svg">
                 <defs>
