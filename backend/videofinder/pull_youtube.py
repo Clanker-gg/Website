@@ -158,12 +158,11 @@ def search_tag(tag, page_token=None, api_key=None):
     try:
         # Single optimized search - let YouTube handle relevance
         search_params = {
-            'q': f"{tag} shorts",
+            'q': f"{tag}",
             'part': 'id',
             'type': 'video',
             'videoDuration': 'short',
             'maxResults': 50,  # Max allowed per request
-            'regionCode': 'US',
             'relevanceLanguage': 'en',
             'safeSearch': 'moderate',
             'order': 'relevance'
