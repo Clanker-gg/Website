@@ -264,21 +264,15 @@ const StudyWithClankers = ({ onBack }) => {
     <div className="app-container">
       <div className="background-gradient-1" />
       <div className="background-gradient-2" />
-
+      <div className="top-left">
+        <button onClick={onBack} className="nav-btn" >
+          ← Back
+        </button>
+      </div>
       <div className="main-content">
         {/* Header */}
         <div className="header">
           <div className="logo-container">
-            <button onClick={onBack} className="back-btn" style={{
-              background: 'none',
-              border: 'none',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginRight: '10px'
-            }}>
-              ← Back
-            </button>
             <div className="logo-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
                 <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
