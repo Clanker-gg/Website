@@ -2,7 +2,7 @@
 
 ## Option 1: Using the server
 
-Use `"https://34.150.25.115.sslip.io/api/videos"` as your api url.
+Use `https://34.150.25.115.sslip.io/api/videos` as your API url.
 This will only work if the server is running a debug environment. In production, it will only allow requests from the frontend server itself, so this will no longer work.
 
 ## Option 2: Running the backend on your device
@@ -28,4 +28,4 @@ or store the env variable `YOUTUBE_API_KEY` on your terminal/computer.
 python manage.py runserver localhost:5000
 ```
 
-The API will be available at `https://localhost:5000/` (+ `api/videos`)
+You can now use `https://localhost:5000/api/videos` as your API url.
