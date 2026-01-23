@@ -9,22 +9,14 @@ from dotenv import load_dotenv
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file if it exists
 env_path = BASE_DIR / ".env"
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production"
-)
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-# Application definition
 INSTALLED_APPS = [
     "corsheaders",
 ]
@@ -34,20 +26,21 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
 ]
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "videofinder.urls"
+WSGI_APPLICATION = "videofinder.wsgi.application"
 
-# Database (not needed for this API)
 DATABASES = {}
 
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

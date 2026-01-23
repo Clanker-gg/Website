@@ -2,7 +2,6 @@ import os
 import sys
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from googleapiclient.errors import HttpError
 from api.pull_youtube import find_videos
 
@@ -15,7 +14,6 @@ def log(message):
     print(message, flush=True)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def get_videos(request):
     """
