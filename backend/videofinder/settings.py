@@ -23,15 +23,18 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://127.0.0.1",
-    "https://localhost",
-    "https://127.0.0.1",
-]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost",
+        "http://127.0.0.1",
+        "https://localhost",
+        "https://127.0.0.1",
+    ]
 
 ROOT_URLCONF = "videofinder.urls"
 WSGI_APPLICATION = "videofinder.wsgi.application"
