@@ -173,3 +173,13 @@ def find_videos(tags, page_token=None, api_key=None):
             print(f"Error searching {tag}: {e}", flush=True)
     
     return id_list, next_page_token
+
+def test_pull_youtube():
+    """Test the pull_youtube module."""
+    tags = ["Maslow's hierarchy of needs"]
+    videos, token = find_videos(tags)
+    print(f"Videos: {videos}")
+    print(f"Next page token: {token}")
+
+if __name__ == '__main__':
+    test_pull_youtube()
