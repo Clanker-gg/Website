@@ -28,4 +28,4 @@ or store the env variable `YOUTUBE_API_KEY` on your terminal/computer.
 python manage.py runserver localhost:5000
 ```
 
-The API will be available at `https://localhost:5000/api/`
+The API will be available at `https://localhost:5000/` (+ `api/videos`)
