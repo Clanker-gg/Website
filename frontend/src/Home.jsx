@@ -1,7 +1,7 @@
 import React from 'react';
 import './Home.css';
 
-export default function AIEducationLanding({ onStart }) {
+export default function AIEducationLanding({ onStart, onLogin }) {
   return (
     <div className="ai-education">
       {/* Site Header */}
@@ -20,7 +20,7 @@ export default function AIEducationLanding({ onStart }) {
         </nav>
         
         <div className="header-actions">
-          <button className="btn-text">Login</button>
+          <button className="btn-text" onClick={onLogin}>Login</button>
           <button className="btn-primary" onClick={onStart}>Get Started</button>
         </div>
       </header>
