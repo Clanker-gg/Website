@@ -3,11 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from googleapiclient.errors import HttpError
 from api.pull_youtube import find_videos
-
-
-def log(message):
-    """Print and flush immediately for Docker logs."""
-    print(message, flush=True)
+from api.helpers import log
 
 
 @require_http_methods(["GET"])
