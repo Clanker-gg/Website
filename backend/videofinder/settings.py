@@ -1,7 +1,3 @@
-"""
-Django settings for videofinder project.
-"""
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -31,16 +27,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "videofinder.urls"
 WSGI_APPLICATION = "videofinder.wsgi.application"
-
-DATABASES = {}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+DATABASES = {}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
