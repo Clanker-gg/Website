@@ -31,6 +31,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Node
+node_modules/
+
 # Environment
 .env
 .env.local

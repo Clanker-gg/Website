@@ -11,6 +11,7 @@ http://* {
 	root * /srv
 	file_server
 
+	# Reverse proxy API requests to backend
 	handle /api/* {
 		reverse_proxy api:5000
 	}

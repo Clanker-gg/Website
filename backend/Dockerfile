@@ -12,5 +12,5 @@ COPY . .
 # Expose port
 EXPOSE 5000
 
-# Run the Flask app
-CMD ["python", "api.py"]
+# Start the application
+CMD ["python", "manage.py", "runserver", "localhost:5000"]
