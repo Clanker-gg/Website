@@ -1,7 +1,3 @@
-"""
-URL configuration for videofinder project.
-"""
-
 from django.urls import path
 from api import views
 
