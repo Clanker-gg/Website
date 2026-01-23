@@ -3,13 +3,14 @@ import json
 import hashlib
 from pathlib import Path
 import isodate
+import tempfile
 from googleapiclient.discovery import build
 
 # Max duration for Shorts (60 seconds)
 MAX_SHORT_DURATION = 60
 
 # Cache directory
-CACHE_DIR = Path('/tmp/youtube_cache')
+CACHE_DIR = Path(tempfile.gettempdir()) / 'youtube_cache'
 CACHE_DIR.mkdir(exist_ok=True)
 
 

@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the Flask app
-CMD ["python", "api.py"]
+CMD ["python", "manage.py", "runserver", "localhost:5000"]
