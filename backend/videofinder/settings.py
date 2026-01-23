@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,3 +43,8 @@ USE_TZ = True
 
 DATABASES = {}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+
+if YOUTUBE_API_KEY is None:
+    raise ImproperlyConfigured("YOUTUBE_API_KEY environment variable is required")
