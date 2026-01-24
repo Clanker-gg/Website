@@ -7,17 +7,31 @@
 }
 
 /* Header Styles */
-.header {
+.header-section {
   margin-bottom: 2rem;
+}
+
+.header {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffffff;
+  padding: 0;
+}
+
+.subheader {
+  font-size: 1.25rem;
+  font-weight: normal;
+  color: #cccccc;
 }
 
 /* Dashboard Styles */
 .dashboard-container {
   min-height: 100vh;
-  width: 80vw;
+  width: 100vw;
   margin-left: 0;
   margin-right: auto;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
@@ -28,8 +42,63 @@
 }
 .dashboard-card {
   min-height: 20vh;
-  width: 80vw;
+  width: 70vw;
   display:flex;
   flex-direction: column;
   align-items: flex-start;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.card-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.card-subtitle {
+  font-size: 1rem;
+  font-weight: normal;
+  color: #cccccc;
+  margin-bottom: 1rem;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #ffffff;
+  min-width: 35px;
+  text-align: right;
 }
