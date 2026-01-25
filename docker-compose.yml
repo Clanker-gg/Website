@@ -17,12 +17,33 @@ services:
     build: ./backend
     container_name: videoapi
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    networks:
+      - app-net
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:7.0
+    container_name: videodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: myapp
+    volumes:
+      - mongodb_data:/data/db
+      - ./backend/database/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - app-net
 
 networks:
   app-net:
     driver: bridge
+
+volumes:
+  mongodb_data:
