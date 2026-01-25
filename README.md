@@ -64,7 +64,7 @@ Clanker prioritizes educational value while maintaining the intuitive UX of mode
 
 - Frontend: ReactJS (might add TailwindCSS)
 - Backend: Django
-- Database: TBD
+- Database: Mongo (might switch to Postgre in the future)
 - Recommendation System: Custom content-based / behavioral logic
 - Video Sources: Public educational short-form content
 
