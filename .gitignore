@@ -35,3 +35,6 @@ node_modules/
 # Environment
 .env
 .env.local
+
+# Local Model
+backend/videofinder/my_custom_modern_filter
