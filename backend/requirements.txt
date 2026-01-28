@@ -3,3 +3,8 @@ django-cors-headers>=4.3.0
 google-api-python-client>=2.100.0
 isodate>=0.6.1
 python-dotenv>=1.0.0
+instructor
+openai
+pydantic
+typing
+pathlib
