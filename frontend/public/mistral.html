@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Course Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Course Generator</h1>
+        <p class="subtitle">Create personalized learning courses powered by AI</p>
+        
+        <form id="courseForm">
+            <div class="form-group">
+                <label for="topic">Course Topic *</label>
+                <input 
+                    type="text" 
+                    id="topic" 
+                    name="topic" 
+                    placeholder="e.g., Python Programming, Digital Marketing, Photography"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="modules">Number of Lessons</label>
+                <input 
+                    type="number" 
+                    id="modules" 
+                    name="modules" 
+                    min="1" 
+                    max="20" 
+                    value="5"
+                >
+            </div>
+            
+            <button type="submit" id="generateBtn">Generate Course</button>
+        </form>
+        
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Generating your course... This may take a moment.</p>
+        </div>
+        
+        <div id="error" class="error hidden"></div>
+        
+        <div id="results" class="results hidden">
+            <h2>Your Generated Course</h2>
+            <div id="courseContent"></div>
+            <button id="downloadBtn" class="download-btn">Download as JSON</button>
+        </div>
+    </div>
+    
+    <script src="script_mistral.js"></script>
+</body>
+</html>

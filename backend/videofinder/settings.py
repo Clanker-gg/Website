@@ -19,6 +19,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
@@ -48,6 +49,10 @@ DATABASES = {}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
-
 if YOUTUBE_API_KEY is None:
     raise ImproperlyConfigured("YOUTUBE_API_KEY environment variable is required")
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not set")
+
